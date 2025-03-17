@@ -24,6 +24,8 @@ export class GameComponent implements OnInit {
   private gameOver = false;
   public gameStarted = false;
   private animationFrame: number | null = null;
+  private coins: Array<{x: number, y: number, vx: number, vy: number, size: number, rotation: number, rotationSpeed: number}> = [];
+  private coinAnimationShown = false;
 
   constructor() {
     this.bird.image.src = 'assets/bird.svg';
@@ -42,6 +44,8 @@ export class GameComponent implements OnInit {
     this.score = 0;
     this.gameOver = false;
     this.gameStarted = false;
+    this.coins = [];
+    this.coinAnimationShown = false;
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -75,6 +79,83 @@ export class GameComponent implements OnInit {
     });
 
     setTimeout(() => this.generatePipes(), 2000);
+  }
+
+  private createCoinExplosion(): void {
+    // Create 20 coins that explode from the center of the screen
+    const canvasWidth = this.canvasRef.nativeElement.width;
+    const canvasHeight = this.canvasRef.nativeElement.height;
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+
+    for (let i = 0; i < 20; i++) {
+      // Random velocity for each coin
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 5 + Math.random() * 5;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed - 5; // Initial upward bias
+
+      this.coins.push({
+        x: centerX,
+        y: centerY,
+        vx: vx,
+        vy: vy,
+        size: 15 + Math.random() * 10, // Random size
+        rotation: Math.random() * Math.PI * 2, // Random initial rotation
+        rotationSpeed: (Math.random() - 0.5) * 0.2 // Random rotation speed
+      });
+    }
+  }
+
+  private updateCoins(): void {
+    for (let i = this.coins.length - 1; i >= 0; i--) {
+      const coin = this.coins[i];
+      
+      // Update position
+      coin.x += coin.vx;
+      coin.y += coin.vy;
+      
+      // Add gravity
+      coin.vy += 0.2;
+      
+      // Update rotation
+      coin.rotation += coin.rotationSpeed;
+      
+      // Remove coins that are off-screen
+      if (coin.y > 600 || coin.x < 0 || coin.x > 400) {
+        this.coins.splice(i, 1);
+      }
+    }
+  }
+
+  private drawCoins(): void {
+    this.ctx.fillStyle = '#FFD700'; // Gold color
+    
+    this.coins.forEach(coin => {
+      this.ctx.save();
+      this.ctx.translate(coin.x, coin.y);
+      this.ctx.rotate(coin.rotation);
+      
+      // Draw a circle coin with a dollar sign
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, coin.size / 2, 0, Math.PI * 2);
+      this.ctx.fill();
+      
+      // Add a highlight to make it look more 3D
+      this.ctx.fillStyle = '#FFF9C4';
+      this.ctx.beginPath();
+      this.ctx.arc(-coin.size / 6, -coin.size / 6, coin.size / 6, 0, Math.PI * 2);
+      this.ctx.fill();
+      
+      // Draw dollar sign
+      this.ctx.fillStyle = '#996515';
+      this.ctx.font = `bold ${coin.size}px Arial`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText('$', 0, 0);
+      
+      this.ctx.restore();
+    });
   }
 
   private animate(): void {
@@ -138,6 +219,12 @@ export class GameComponent implements OnInit {
       if (pipe.x + 50 < this.bird.x && !pipe.passed) {
         this.score++;
         pipe.passed = true;
+        
+        // Check if score reached 10 and show coin explosion
+        if (this.score === 10 && !this.coinAnimationShown) {
+          this.createCoinExplosion();
+          this.coinAnimationShown = true;
+        }
       }
 
       // Remove off-screen pipes
@@ -145,6 +232,12 @@ export class GameComponent implements OnInit {
         this.pipes.splice(index, 1);
       }
     });
+
+    // Update and draw coins
+    if (this.coins.length > 0) {
+      this.updateCoins();
+      this.drawCoins();
+    }
 
     // Draw score
     this.ctx.fillStyle = '#000';
