@@ -15,7 +15,8 @@ export class GameComponent implements OnInit {
     gravity: 0.5,
     jump: -8,
     size: 20,
-    image: new Image()
+    image: new Image(),
+    rotation: 0
   };
   private cactusImage = new Image();
   private pipes: Array<{ x: number, gapY: number, passed?: boolean }> = [];
@@ -36,6 +37,7 @@ export class GameComponent implements OnInit {
   private initGame(): void {
     this.bird.y = 200;
     this.bird.velocity = 0;
+    this.bird.rotation = 0;
     this.pipes = [];
     this.score = 0;
     this.gameOver = false;
@@ -85,15 +87,26 @@ export class GameComponent implements OnInit {
     this.bird.velocity += this.bird.gravity;
     this.bird.y += this.bird.velocity;
 
-    // Draw bird with image
+    // Calculate bird rotation based on velocity
+    // Limit the rotation angle between -30 and 45 degrees
+    const targetRotation = this.bird.velocity * 2;
+    // Smooth rotation transition
+    this.bird.rotation = this.bird.rotation * 0.8 + targetRotation * 0.2;
+    this.bird.rotation = Math.max(Math.min(this.bird.rotation, Math.PI/4), -Math.PI/6);
+
+    // Draw bird with image and rotation
     const birdSize = this.bird.size * 2;
+    this.ctx.save();
+    this.ctx.translate(this.bird.x, this.bird.y);
+    this.ctx.rotate(this.bird.rotation);
     this.ctx.drawImage(
       this.bird.image, 
-      this.bird.x - birdSize/2, 
-      this.bird.y - birdSize/2, 
+      -birdSize/2, 
+      -birdSize/2, 
       birdSize, 
       birdSize
     );
+    this.ctx.restore();
 
     // Update and draw pipes (cacti)
     this.pipes.forEach((pipe, index) => {
