@@ -145,11 +145,26 @@ export class GameComponent implements OnInit {
 
     // Draw game over message
     if (this.gameOver) {
+      const canvasWidth = this.canvasRef.nativeElement.width;
+      const canvasHeight = this.canvasRef.nativeElement.height;
+      const centerX = canvasWidth / 2;
+      const centerY = canvasHeight / 2;
+      
       this.ctx.fillStyle = '#000';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      
+      // Game Over text
       this.ctx.font = '48px Arial';
-      this.ctx.fillText('Game Over!', 100, 300);
+      this.ctx.fillText('Game Over!', centerX, centerY - 30);
+      
+      // Restart instruction
       this.ctx.font = '24px Arial';
-      this.ctx.fillText('Press Space to Restart', 80, 350);
+      this.ctx.fillText('Press Space to Restart', centerX, centerY + 30);
+      
+      // Reset text alignment for other text rendering
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'alphabetic';
     }
 
     this.animationFrame = requestAnimationFrame(() => this.animate());
