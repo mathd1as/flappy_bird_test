@@ -14,7 +14,8 @@ export class GameComponent implements OnInit {
     velocity: 0,
     gravity: 0.5,
     jump: -8,
-    size: 20
+    size: 20,
+    image: new Image()
   };
   private pipes: Array<{ x: number, gapY: number, passed?: boolean }> = [];
   private score = 0;
@@ -22,7 +23,9 @@ export class GameComponent implements OnInit {
   public gameStarted = false;
   private animationFrame: number | null = null;
 
-  constructor() { }
+  constructor() {
+    this.bird.image.src = 'assets/bird.svg';
+  }
 
   ngOnInit(): void {
     this.initGame();
@@ -80,11 +83,15 @@ export class GameComponent implements OnInit {
     this.bird.velocity += this.bird.gravity;
     this.bird.y += this.bird.velocity;
 
-    // Draw bird
-    this.ctx.fillStyle = '#FFD700';
-    this.ctx.beginPath();
-    this.ctx.arc(this.bird.x, this.bird.y, this.bird.size, 0, Math.PI * 2);
-    this.ctx.fill();
+    // Draw bird with image instead of yellow circle
+    const birdSize = this.bird.size * 2; // Adjust size for the image
+    this.ctx.drawImage(
+      this.bird.image, 
+      this.bird.x - birdSize/2, 
+      this.bird.y - birdSize/2, 
+      birdSize, 
+      birdSize
+    );
 
     // Update and draw pipes
     this.pipes.forEach((pipe, index) => {
