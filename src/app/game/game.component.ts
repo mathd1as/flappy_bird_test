@@ -17,6 +17,7 @@ export class GameComponent implements OnInit {
     size: 20,
     image: new Image()
   };
+  private cactusImage = new Image();
   private pipes: Array<{ x: number, gapY: number, passed?: boolean }> = [];
   private score = 0;
   private gameOver = false;
@@ -25,6 +26,7 @@ export class GameComponent implements OnInit {
 
   constructor() {
     this.bird.image.src = 'assets/bird.svg';
+    this.cactusImage.src = 'assets/cactus.svg';
   }
 
   ngOnInit(): void {
@@ -83,8 +85,8 @@ export class GameComponent implements OnInit {
     this.bird.velocity += this.bird.gravity;
     this.bird.y += this.bird.velocity;
 
-    // Draw bird with image instead of yellow circle
-    const birdSize = this.bird.size * 2; // Adjust size for the image
+    // Draw bird with image
+    const birdSize = this.bird.size * 2;
     this.ctx.drawImage(
       this.bird.image, 
       this.bird.x - birdSize/2, 
@@ -93,14 +95,26 @@ export class GameComponent implements OnInit {
       birdSize
     );
 
-    // Update and draw pipes
+    // Update and draw pipes (cacti)
     this.pipes.forEach((pipe, index) => {
       pipe.x -= 2;
       
-      // Draw pipes
-      this.ctx.fillStyle = '#2ecc71';
-      this.ctx.fillRect(pipe.x, 0, 50, pipe.gapY);
-      this.ctx.fillRect(pipe.x, pipe.gapY + 150, 50, 600 - (pipe.gapY + 150));
+      // Draw cacti instead of rectangle pipes
+      // Top cactus (flipped upside down)
+      this.ctx.save();
+      this.ctx.translate(pipe.x, pipe.gapY);
+      this.ctx.scale(1, -1); // Flip vertically
+      this.ctx.drawImage(this.cactusImage, 0, 0, 50, pipe.gapY);
+      this.ctx.restore();
+      
+      // Bottom cactus
+      this.ctx.drawImage(
+        this.cactusImage, 
+        pipe.x, 
+        pipe.gapY + 150, 
+        50, 
+        600 - (pipe.gapY + 150)
+      );
 
       // Check collision
       if (this.checkCollision(pipe)) {
