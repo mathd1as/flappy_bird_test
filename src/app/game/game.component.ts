@@ -49,8 +49,8 @@ export class GameComponent implements OnInit {
       } else if (!this.gameOver) {
         this.bird.velocity = this.bird.jump;
       } else {
-        this.initGame();
-        this.startGame();
+        // Reload the page instead of just restarting the game
+        window.location.reload();
       }
     }
   }
